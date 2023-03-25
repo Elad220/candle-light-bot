@@ -8,14 +8,18 @@ LAMBDA_NAME = os.environ['LAMBDA_NAME']
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
+
+def _get_lambda_env_vars(lambda_client):
+    return lambda_client.get_function_configuration(
+        FunctionName=LAMBDA_NAME
+    )['Environment']['Variables']
+
 def update_chat_id_env_var(chat_id):
     """
     Update the chat ID environment variable of the Lambda function.
     """
     lambda_client = boto3.client('lambda')
-    env_vars = lambda_client.get_function_configuration(
-        FunctionName=LAMBDA_NAME
-    )['Environment']['Variables']
+    env_vars = _get_lambda_env_vars(lambda_client)
     
     # Check if the chat ID is already present in the environment variables
     if 'BOT_CHATID' in env_vars:
@@ -44,5 +48,13 @@ def send_welcome(message):
     
     # Update the environment variable
     update_chat_id_env_var(chat_id)
+
+@bot.message_handler(commands=['view-subscribers'])
+def get_subscribers(message):
+    names_list = []
+    chat_ids = _get_lambda_env_vars(boto3.client('lambda'))['BOT_CHATID']
+    for chat_id in json.loads(chat_ids):
+        names_list.append(bot.get_chat_member(chat_id,chat_id).user.first_name)
+    bot.reply_to(message, f"Your subscribed users are {names_list}.")
 
 bot.polling()
