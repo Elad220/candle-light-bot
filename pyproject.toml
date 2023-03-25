@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "telegram-bot"
+version = "0.1.0"
+description = ""
+authors = ["Elad Asaf <Elad220@gmail.com>"]
+readme = "README.md"
+packages = [{include = "telegram_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytelegrambotapi = "^4.10.0"
+boto3 = "^1.26.98"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
