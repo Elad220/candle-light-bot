@@ -67,8 +67,8 @@ def _get_subscriber_names() -> list:
 def send_welcome(message):
     msg = "Hello! I am a bot that will notify you 10 and 5 minutes " + \
         "before it's candle lighting time every Friday. \nTo subscribe " + \
-        "to the bot, type /subscribe. \nTo view your subscribed users, " + \
-        "type /view.\nTo unsubscribe from the bot, type /unsubscribe."
+        "to the bot, type /subscribe. \nTo unsubscribe from the bot, type /unsubscribe.\n" + \
+        "To view the current subscribers, type /view (for admins only)."
     bot.reply_to(message, msg)
 
 
