@@ -10,7 +10,11 @@ packages = [{include = "telegram_bot"}]
 python = "^3.10"
 pytelegrambotapi = "^4.10.0"
 boto3 = "^1.26.98"
+telebot = "^0.0.5"
 
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
 
 [build-system]
 requires = ["poetry-core"]
