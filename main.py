@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import requests
+from datetime import datetime, timedelta
 
 import boto3
 import telebot
@@ -17,9 +19,31 @@ FORMATTER = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 bot = telebot.TeleBot(BOT_TOKEN)
 
 logger = logging.getLogger(__name__)
+URL = "https://www.hebcal.com/shabbat?cfg=json&geonameid=293397&M=on"
 
 
-def _setup_logger(logger):
+def _get_lighting_time():
+    try:
+        response = requests.get(URL)
+        response.raise_for_status()
+        json_response = response.json()
+        for item in json_response["items"]:
+            if item["category"] == "candles":
+                candle_time = item["date"]
+                break
+        return datetime.strptime(candle_time, "%Y-%m-%dT%H:%M:%S%z")
+    except requests.exceptions.HTTPError as errh:
+        logger.error(f"HTTP Error: {errh}")
+    except requests.exceptions.ConnectionError as errc:
+        logger.error(f"Error Connecting: {errc}")
+    except requests.exceptions.Timeout as errt:
+        logger.error(f"Timeout Error: {errt}")
+    except requests.exceptions.RequestException as err:
+        logger.error(f"Something went wrong: {err}")
+    return None
+
+
+def _setup_logger(logger: logging.Logger):
     logger.setLevel(logging.DEBUG)
     log_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), BOT_LOGS_FILENAME
@@ -129,6 +153,7 @@ def send_welcome(message):
         "Hello! I am a bot that will notify you 10 and 5 minutes "
         + "before it's candle lighting time every Friday. \nTo subscribe "
         + "to the bot, type /subscribe. \nTo unsubscribe from the bot, type /unsubscribe.\n"
+        + "If you'd like to manually view candle lighting time, type /time. \n"
         + "To view the current subscribers, type /view (for admins only)."
     )
     bot.reply_to(message, msg)
@@ -144,6 +169,15 @@ def view_subscribers(message):
     )
     bot.reply_to(message, message_reply)
     logger.info("User: %s viewed subscribers.", _get_user_name(chat_id))
+
+
+@bot.message_handler(commands=["time"])
+def view_candle_lighting_time(message):
+    chat_id = message.chat.id
+    time = _get_lighting_time()
+    msg = f"The candle lighting time is {time.time()}."
+    bot.reply_to(message, msg)
+    logger.info("User: %s viewed time.", _get_user_name(chat_id))
 
 
 @bot.message_handler(commands=["subscribe"])
